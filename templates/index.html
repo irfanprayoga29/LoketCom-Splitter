@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Splitter</title>
+    <style>
+        .nama-tiket-row {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF Splitter</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Form untuk unggah PDF dan masukkan nama serta jumlah tiket -->
+    <form action="{{ url_for('upload_pdf') }}" method="POST" enctype="multipart/form-data">
+        <label for="pdf">Select PDF file:</label>
+        <input type="file" name="pdf" id="pdf" required><br><br>
+
+        <div id="nama-tiket-container">
+            <h3>Masukkan Nama dan Jumlah Tiket:</h3>
+            <div class="nama-tiket-row">
+                <label>Nama:</label>
+                <input type="text" name="nama[]" required>
+                <label>Jumlah Tiket:</label>
+                <input type="number" name="tiket[]" min="1" required>
+                <button type="button" onclick="removeNamaTiket(this)">Hapus</button>
+            </div>
+        </div>
+
+        <button type="button" onclick="addNamaTiket()">Tambah Nama & Tiket</button><br><br>
+
+        <button type="submit">Upload and Split PDF</button>
+    </form>
+
+    <script>
+        // Fungsi untuk menambahkan input nama dan jumlah tiket baru
+        function addNamaTiket() {
+            const container = document.getElementById('nama-tiket-container');
+            const newRow = document.createElement('div');
+            newRow.classList.add('nama-tiket-row');
+
+            newRow.innerHTML = `
+                <label>Nama:</label>
+                <input type="text" name="nama[]" required>
+                <label>Jumlah Tiket:</label>
+                <input type="number" name="tiket[]" min="1" required>
+                <button type="button" onclick="removeNamaTiket(this)">Hapus</button>
+            `;
+
+            container.appendChild(newRow);
+        }
+
+        // Fungsi untuk menghapus input nama dan jumlah tiket
+        function removeNamaTiket(button) {
+            const row = button.parentElement;
+            row.remove();
+        }
+    </script>
+</body>
+</html>
