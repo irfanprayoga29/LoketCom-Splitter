@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, send_file
+from flask import Flask, request, render_template, redirect, url_for, flash, send_file,jsonify
 import PyPDF2
 import os
 import shutil
@@ -102,3 +102,19 @@ def download_zip():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/count_pages', methods=['POST'])
+def count_pages():
+    if 'pdf' not in request.files:
+        return jsonify({'error': 'No PDF file uploaded'}), 400
+
+    file = request.files['pdf']
+    
+    try:
+        pdf_reader = PyPDF2.PdfReader(file)
+        total_pages = len(pdf_reader.pages)
+    except Exception as e:
+        return jsonify({'error': 'Failed to read PDF file: ' + str(e)}), 500
+
+    return jsonify({'total_pages': total_pages})
+
