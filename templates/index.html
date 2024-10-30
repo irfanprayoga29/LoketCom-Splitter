@@ -1,70 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>PDF Splitter</title>
+    <title>PDF Splitter E LOKET</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-style.css') }}">
     <style>
+        /* Responsive Title with Logo */
+        .title-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .title-container img {
+            width: 40px;
+            height: auto;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        /* Form Styling */
+        form {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        label {
+            display: none;
+            /* Hide labels to save space */
+        }
+
         .nama-tiket-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
+        }
+
+        .nama-tiket-row input[type="text"],
+        .nama-tiket-row input[type="number"] {
+            flex: 1;
+            padding: 8px;
+        }
+
+        button {
+            padding: 8px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        /* Total tickets display */
+        #total-tickets {
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Media Query for smaller screens */
+        @media (max-width: 768px) {
+            .title-container img {
+                width: 30px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            form {
+                padding: 15px;
+            }
+
+            .nama-tiket-row {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
+
 <body>
-    <h1>PDF Splitter</h1>
+    <!-- Title with Logo -->
+    <div class="title-container">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/PSIM_current_logo.png/150px-PSIM_current_logo.png"
+            alt="PSIM Logo">
+        <h1>PDF Splitter E LOKET</h1>
+        <hr> <!-- Garis horizontal sebagai pemisah -->
+        <p>Created by Irfan Ganteng</p>
+    </div>
+
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     {% endwith %}
 
-    <!-- Form untuk unggah PDF dan masukkan nama serta jumlah tiket -->
+    <!-- Form to upload PDF and enter ticket details -->
     <form action="{{ url_for('upload_pdf') }}" method="POST" enctype="multipart/form-data">
-        <label for="pdf">Select PDF file:</label>
-        <input type="file" name="pdf" id="pdf" required><br><br>
+        <h3>Masukkan File Tiket</h3>
+        <input type="file" name="pdf" id="pdf" required  accept="application/pdf, application/vnd.ms-excel" /> <br>
+
+        <!-- Display the total page count here -->
+        <div id="total-pages">Total Halaman PDF: 0</div><br>
 
         <div id="nama-tiket-container">
             <h3>Masukkan Nama dan Jumlah Tiket:</h3>
             <div class="nama-tiket-row">
-                <label>Nama:</label>
-                <input type="text" name="nama[]" required>
-                <label>Jumlah Tiket:</label>
-                <input type="number" name="tiket[]" min="1" required>
+                <input type="text" name="nama[]" placeholder="Nama" required>
+                <input type="number" name="tiket[]" min="1" placeholder="Jumlah Tiket" required
+                    oninput="updateTotalTickets()">
                 <button type="button" onclick="removeNamaTiket(this)">Hapus</button>
             </div>
         </div>
 
-        <button type="button" onclick="addNamaTiket()">Tambah Nama & Tiket</button><br><br>
+        <!-- Display the Total Count of Tickets -->
+        <div id="total-tickets">Total Tiket: 0</div><br>
 
+        <button type="button" onclick="addNamaTiket()">Tambah Nama & Tiket</button>
+        <button type="button" onclick="clearNamaTiket()">Clear Semua Kolom</button><br><br>
         <button type="submit">Upload and Split PDF</button>
     </form>
 
     <script>
-        // Fungsi untuk menambahkan input nama dan jumlah tiket baru
+        // Function to add a new 'nama-tiket' row
         function addNamaTiket() {
             const container = document.getElementById('nama-tiket-container');
             const newRow = document.createElement('div');
             newRow.classList.add('nama-tiket-row');
 
             newRow.innerHTML = `
-                <label>Nama:</label>
-                <input type="text" name="nama[]" required>
-                <label>Jumlah Tiket:</label>
-                <input type="number" name="tiket[]" min="1" required>
+                <input type="text" name="nama[]" placeholder="Nama" required>
+                <input type="number" name="tiket[]" min="1" placeholder="Jumlah Tiket" required oninput="updateTotalTickets()">
                 <button type="button" onclick="removeNamaTiket(this)">Hapus</button>
             `;
 
             container.appendChild(newRow);
+            updateTotalTickets();
         }
 
-        // Fungsi untuk menghapus input nama dan jumlah tiket
+        // Function to remove a 'nama-tiket' row
         function removeNamaTiket(button) {
             const row = button.parentElement;
             row.remove();
+            updateTotalTickets();
         }
+
+        // Function to clear all 'nama-tiket' rows
+        function clearNamaTiket() {
+            const container = document.getElementById('nama-tiket-container');
+            container.innerHTML = ''; // Clears all rows within the container
+            updateTotalTickets(); // Reset the total to 0
+        }
+
+        // Function to update the total of 'Jumlah Tiket'
+        function updateTotalTickets() {
+            const ticketInputs = document.querySelectorAll('input[name="tiket[]"]');
+            let total = 0;
+
+            // Sum up all ticket input values
+            ticketInputs.forEach(input => {
+                const ticketCount = parseInt(input.value) || 0; // Default to 0 if input is empty
+                total += ticketCount;
+            });
+
+            // Display the total
+            document.getElementById('total-tickets').textContent = `Total Tiket: ${total}`;
+        }
+
+        function getPDFPageCount() {
+        const pdfInput = document.getElementById('pdf');
+        if (pdfInput.files.length === 0) return;  // Pastikan file terpilih
+
+        const formData = new FormData();
+        formData.append('pdf', pdfInput.files[0]);
+
+        fetch('/count_pages', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById('total-pages').textContent = `Total Halaman PDF: ${data.total_pages}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menghitung halaman PDF');
+        });
+    }
+
     </script>
 </body>
+
 </html>
